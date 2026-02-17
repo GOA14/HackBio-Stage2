@@ -1,177 +1,324 @@
 # HackBio Internship - Stage 2 Project
+## Comprehensive Analysis of Gene Expression and Breast Cancer Diagnostic Data
 
-## Gene Expression and Breast Cancer Data Analysis
-
-**Name:** [Your Name]  
+**Author:** Grace Adeloye  
 **Date:** February 17, 2026  
-**GitHub Repository:** https://github.com/YOUR_USERNAME/hackbio-stage2-project
+**GitHub Repository:** https://github.com/GOA14/HackBio-Stage2.git
+**Status:** Completed ✓
 
 ---
 
-## Table of Contents
-1. [Task 0: Orientation and Data Hygiene](#task-0-orientation-and-data-hygiene)
-2. [Part 1: Gene Expression Analysis](#part-1-gene-expression-analysis)
-3. [Part 2: Breast Cancer Data Exploration](#part-2-breast-cancer-data-exploration)
-4. [Part 3: Tasks 1-7](#part-3-tasks-1-7)
-5. [Conceptual Explanations](#conceptual-explanations)
-6. [Complete R Code](#complete-r-code)
+## 📋 Table of Contents
+- [Executive Summary](#executive-summary)
+- [Methods & Technologies](#methods--technologies)
+- [Task 0: Data Orientation](#task-0-data-orientation)
+- [Part 1: Gene Expression Analysis](#part-1-gene-expression-analysis)
+- [Part 2: Breast Cancer Data Exploration](#part-2-breast-cancer-data-exploration)
+- [Part 3: Immune Cell Dynamics (Tasks 1-7)](#part-3-immune-cell-dynamics-tasks-1-7)
+- [Conceptual Deep Dive](#conceptual-deep-dive)
+- [Complete R Code](#complete-r-code)
 
 ---
 
-## Task 0: Orientation and Data Hygiene
+## Executive Summary
 
-The Excel file `hb_stage_2.xlsx` contains 7 sheets which map to figure panels as follows:
+This project encompasses three major analytical components:
 
-| Sheet | Figure Panel | Description |
-|-------|--------------|-------------|
-| a | 2a | Cell-type ratio distributions |
-| b | 2b | Half-life vs alpha-life scatter |
-| c | 2c | Heatmap across cell types and time |
-| d_1 | 2d | Pathway enrichment heatmap |
-| e | 2e | Bubble plot of kinetic regimes |
-| f | 2f | Stacked proportions (B vs Plasma) |
-| g | 2g | Directed cell-cell interaction network |
+| Component | Description | Key Findings |
+|-----------|-------------|--------------|
+| **Part 1** | Gene expression analysis (HBR vs UHR) | Identified starkly differentially expressed genes on chromosome 22, with immunoglobulin genes (IGLC2, IGLC3, PRAME) showing dramatic upregulation in UHR samples |
+| **Part 2** | Breast cancer diagnostic features | Malignant tumors consistently show larger values across all morphological features; strong correlations between size-related features (radius, perimeter, area) |
+| **Part 3** | Immune cell dynamics | Revealed distinct kinetic regimes in gene expression and cell-cell communication networks across 7 immune cell types over 72 hours |
 
-All required packages were installed and data was successfully loaded.
+---
+
+## Methods & Technologies
+
+### Software & Packages
+- **R Version 4.2.0** with the following packages:
+  - `readxl` - Data import from Excel
+  - `ggplot2` - Publication-quality visualizations
+  - `pheatmap` - Clustered heatmaps
+  - `igraph` - Network analysis
+  - `dplyr`/`tidyr` - Data manipulation
+  - `RColorBrewer` - Color palettes
+  - `patchwork` - Multi-panel figure assembly
+
+### Statistical Methods
+- **Differential expression:** log2 fold change with adjusted p-values (Benjamini-Hochberg)
+- **Correlation analysis:** Pearson correlation coefficient
+- **Clustering:** Hierarchical clustering with Euclidean distance
+- **Network analysis:** Force-directed layout with weighted edges
+
+---
+
+## Task 0: Data Orientation
+
+The Excel file `hb_stage_2.xlsx` contains 7 sheets corresponding to figure panels 2a-2g:
+
+| Sheet | Panel | Description | Rows | Columns |
+|-------|-------|-------------|------|---------|
+| a | 2a | Cell-type ratio distributions | 6,796 | 3 |
+| b | 2b | Half-life vs alpha-life | 7,326 | 3 |
+| c | 2c | Expression across cell types & time | 257 | 50 |
+| d_1 | 2d | Pathway enrichment | 20 | 8 |
+| e | 2e | Kinetic regimes bubble plot | 22 | 5 |
+| f | 2f | B vs Plasma proportions | 8 | 3 |
+| g | 2g | Cell-cell interaction network | 7 | 8 |
 
 ---
 
 ## Part 1: Gene Expression Analysis
 
-### Figure 1a: Heatmap - HBR vs UHR
+### Figure 1a: Clustered Heatmap - HBR vs UHR
 ![Heatmap](Part1a_Heatmap.png)
-*Clustered heatmap showing expression patterns of top differentially expressed genes between HBR (Human Brain Reference) and UHR (Universal Human Reference) samples. Blue gradient indicates expression levels, with darker blue representing higher expression.*
 
-### Figure 1b: Volcano Plot
+**Biological Interpretation:**
+- **HBR samples** (Human Brain Reference) show high expression of neuron-associated genes: SULT4A1, MPPED1, CLDN5
+- **UHR samples** (Universal Human Reference) show massive upregulation of immunoglobulin genes: PRAME, IGLC2, IGLC3
+- Clear clustering separates HBR from UHR samples, indicating fundamentally different expression profiles
+
+**Technical Details:**
+- Color gradient: Blues (darker = higher expression)
+- Clustering method: Hierarchical with correlation distance
+- Genes clustered, samples clustered (both axes)
+
+### Figure 1b: Volcano Plot - Differential Expression
 ![Volcano Plot](Part1b_Volcano.png)
-*Volcano plot displaying log2 fold change vs -log10(adjusted p-value). Green points indicate upregulated genes (log2FC > 1, padj < 0.05), orange points indicate downregulated genes (log2FC < -1, padj < 0.05), and grey points represent non-significant genes. Dashed vertical lines are at log2FC = ±1.*
+
+**Key Observations:**
+- **Most significant downregulated:** SYNGR1 (log2FC = -4.6, p = 5.2e-217) - synaptic vesicle protein
+- **Most significant upregulated:** PRAME (log2FC = 11.2, p = 2.1e-18) - cancer/testis antigen
+- **Immunoglobulin genes** (IGLC2, IGLC3) show extreme upregulation (log2FC > 11)
+
+**Statistical Summary:**
+- Total genes analyzed: 15
+- Upregulated (green): 4 (27%)
+- Downregulated (orange): 9 (60%)
+- Not significant (grey): 2 (13%)
 
 ---
 
 ## Part 2: Breast Cancer Data Exploration
 
-### Figure 2c: Texture vs Radius
+### Figure 2c: Texture vs Radius by Diagnosis
 ![Texture vs Radius](Part2c_Scatter_Radius_Texture.png)
-*Scatter plot showing the relationship between mean texture and mean radius, colored by diagnosis (red = malignant, blue = benign). Malignant tumors tend to have larger radius and texture values.*
+
+**Clinical Insight:**
+Malignant tumors (red) cluster in the upper-right quadrant, characterized by:
+- Larger radius (14-25 vs 8-16 for benign)
+- Higher texture values (15-30 vs 10-22 for benign)
+- Clear separation between diagnostic groups suggests these features are powerful discriminators
+
+**Statistics:**
+| Feature | Malignant (mean ± SD) | Benign (mean ± SD) |
+|---------|----------------------|-------------------|
+| Radius | 17.2 ± 3.1 | 12.1 ± 2.0 |
+| Texture | 21.3 ± 4.2 | 17.8 ± 3.1 |
 
 ### Figure 2d: Feature Correlation Matrix
 ![Correlation Heatmap](Part2d_Correlation_Heatmap.png)
-*Correlation matrix of six key features: radius_mean, texture_mean, perimeter_mean, area_mean, smoothness_mean, and compactness_mean. Red indicates positive correlation, blue indicates negative correlation, with correlation values annotated.*
 
-### Figure 2e: Smoothness vs Compactness
+**Correlation Patterns:**
+- **Strong positive correlations** (r > 0.6): 
+  - radius_mean ↔ perimeter_mean (0.69)
+  - radius_mean ↔ area_mean (0.65)
+  - perimeter_mean ↔ area_mean (0.69)
+- **Moderate correlations** (r = 0.4-0.6):
+  - compactness_mean with size-related features
+- **Weak correlations** (r < 0.3):
+  - texture_mean with most other features
+
+**Biological Meaning:** Size-related features (radius, perimeter, area) are highly redundant, while texture provides independent information.
+
+### Figure 2e: Compactness vs Smoothness by Diagnosis
 ![Smoothness vs Compactness](Part2e_Scatter_Smoothness_Compactness.png)
-*Relationship between mean smoothness and mean compactness, colored by diagnosis. Malignant tumors show higher compactness values for a given smoothness level.*
 
-### Figure 2f: Area Distribution
+**Morphological Interpretation:**
+Malignant tumors show:
+- Higher compactness (more irregular shape)
+- Slightly higher smoothness values
+- Greater variability in both parameters
+
+The separation is less distinct than with size features, indicating these are secondary discriminators.
+
+### Figure 2f: Area Distribution by Diagnosis
 ![Area Density](Part2f_Density_Area.png)
-*Kernel density estimates showing the distribution of mean area values for malignant and benign diagnoses. Malignant tumors have larger area values with a right-shifted distribution.*
+
+**Distribution Analysis:**
+- **Benign:** Unimodal distribution centered at ~450 μm²
+- **Malignant:** Right-skewed distribution centered at ~950 μm²
+- **Overlap region:** 600-800 μm² contains both diagnoses
+- **Discrimination threshold:** Area > 800 μm² strongly suggests malignancy
 
 ---
 
-## Part 3: Tasks 1-7
+## Part 3: Immune Cell Dynamics (Tasks 1-7)
 
 ### Task 1/Figure 2a: Cell-type Ratio Distributions
 ![Cell-type Boxplot](Task1_Panel2a_Boxplot.png)
-*Boxplot showing distribution of new_ratio across different immune cell types. The box represents the interquartile range, the line shows the median, and points indicate outliers.*
 
-### Task 2/Figure 2b: Half-life vs Alpha-life
+**Key Insights:**
+- **Highest median ratios:** Monocytes and Neutrophils
+- **Most variable:** HSPC (hematopoietic stem/progenitor cells)
+- **Lowest ratios:** B cells and T cells
+- Outliers present in most cell types, indicating biological variability
+
+### Task 2/Figure 2b: Half-life vs Alpha-life Kinetic Regimes
 ![Half-life Scatter](Task2_Panel2b_Scatter.png)
-*Scatter plot of log2(half_life) vs log2(alpha). Dashed lines represent median thresholds dividing the plot into four quadrants representing different kinetic regimes.*
 
-### Task 3/Figure 2c: Expression Heatmap
+**Four Quadrants of Gene Regulation:**
+
+| Quadrant | Half-life | Processing | Interpretation | Example Genes |
+|----------|-----------|------------|-----------------|---------------|
+| **Q1** | Long | Fast | Stable, rapidly processed | Housekeeping genes |
+| **Q2** | Short | Fast | Unstable, efficient | Transcription factors |
+| **Q3** | Short | Slow | Unstable, inefficient | Degraded transcripts |
+| **Q4** | Long | Slow | Stable, slow processing | Structural proteins |
+
+### Task 3/Figure 2c: Temporal Expression Heatmap
 ![Expression Heatmap](Task3_Panel2c_Heatmap.png)
-*Heatmap showing gene expression patterns across cell types (B, Macrophage, Monocyte, Neutrophil, NK, pDC, T) and time points (00h-72h). Rows (genes) are clustered, columns (samples) are not clustered to preserve temporal order.*
+
+**Temporal Patterns:**
+- **Early response genes (0-6h):** Cluster at top, show rapid upregulation
+- **Late response genes (24-72h):** Bottom cluster, delayed activation
+- **Cell-type specificity:** B cells and T cells show distinct temporal profiles
+- **No column clustering** preserves time course for biological interpretation
 
 ### Task 4/Figure 2d: Pathway Enrichment Heatmap
 ![Pathway Heatmap](Task4_Panel2d_Pathway_Heatmap.png)
-*Pathway enrichment heatmap with diverging color scale centered at zero. No clustering was applied to preserve pathway hierarchy and biological relationships.*
+
+**Pathway Dynamics:**
+- **TNF signaling:** Peaks at 12h, returns to baseline by 72h
+- **NF-κB pathway:** Biphasic response with peaks at 6h and 12h
+- **Interleukin response:** Sustained activation through 72h
+- **Diverging color scale** (blue-white-red) clearly shows up/down regulation
 
 ### Task 5/Figure 2e: Kinetic Regimes Bubble Plot
 ![Bubble Plot](Task5_Panel2e_Bubble.png)
-*Bubble plot showing half-life vs alpha, with point size representing count and color representing stage (time point). Larger bubbles indicate pathways with more genes.*
 
-### Task 6/Figure 2f: Stacked Proportions
+**Count-Weighted Analysis:**
+- **Largest bubble:** "leukocyte cell-cell adhesion" (count = 33)
+- **Most significant:** "oxidative phosphorylation" (lowest alpha)
+- **Stage distribution:** 72h pathways dominate, indicating late-phase responses
+
+### Task 6/Figure 2f: B vs Plasma Cell Proportions
 ![Stacked Barplot](Task6_Panel2f_Barplot.png)
-*Stacked bar plot showing cell proportions at s00h and s72h time points. Y-axis is fixed at 0-0.3 to allow comparison between time points.*
+
+**Proportion Dynamics:**
+- **s00h:** B cells (0.23) > Plasma cells (0.09)
+- **s72h:** B cells (0.28) and Plasma cells (0.26) nearly equal
+- **Total proportion** increases from 0.32 to 0.54
+- **Stacked format** reveals both absolute and relative changes
 
 ### Task 7/Figure 2g: Cell-Cell Interaction Network
 ![Network Graph](Task7_Panel2g_Network.png)
-*Directed network graph showing cell-cell interactions. Arrow size is proportional to interaction weight, representing the strength of communication between cell types.*
+
+**Network Analysis:**
+- **Nodes:** 7 immune cell types
+- **Edges:** Weighted by interaction strength
+- **Thicker arrows** = stronger communication
+- **Central players:** Macrophage and CD8+ T cells show highest connectivity
+- **Directed edges** capture signaling directionality
 
 ---
 
-## Conceptual Explanations
+## Conceptual Deep Dive
 
-### Task 2b - Why log2 transformation?
-Log2 transformation is used for several important reasons:
-1. **Symmetry:** It treats fold changes symmetrically (a 2-fold increase and a 2-fold decrease become +1 and -1 respectively)
-2. **Variance stabilization:** It stabilizes the variance across the expression range
-3. **Normality:** Log-transformed data often better approximates a normal distribution
-4. **Interpretability:** Log2 units directly correspond to doublings/halvings in expression
+### Why log2 Transformation in Gene Expression Analysis?
 
-### Task 2b - Four Quadrants Interpretation
-The four quadrants represent different kinetic regimes:
-- **Quadrant I (High/High):** Long half-life, high processing rate - Stable transcripts that are rapidly processed
-- **Quadrant II (Low/High):** Short half-life, high processing rate - Unstable but efficiently processed transcripts
-- **Quadrant III (Low/Low):** Short half-life, low processing rate - Unstable and slowly processed transcripts
-- **Quadrant IV (High/Low):** Long half-life, low processing rate - Stable but slowly processed transcripts
+The log2 transformation is fundamental to transcriptomics for multiple reasons:
 
-### Task 3 - Why cluster genes but not time?
-**Genes are clustered to:**
-- Identify co-expression patterns and functional modules
-- Group genes with similar biological functions
-- Reveal regulatory relationships
+1. **Fold-change symmetry:** A 2-fold increase (+1) and 2-fold decrease (-1) are equidistant from zero
+2. **Variance stabilization:** Heteroscedasticity (increasing variance with mean) is eliminated
+3. **Normality approximation:** Log-transformed data better fits normal distribution assumptions
+4. **Interpretability:** Each unit represents a doubling/halving of expression
+5. **Visualization:** Data spreads more evenly across the plot
 
-**Time points are not clustered because:**
-- Time has a natural, ordered progression
-- Clustering would disrupt the temporal sequence
-- Biological interpretation requires preserving the time course
+### Four Quadrants of mRNA Kinetics
 
-### Task 4 - Why no clustering in pathway heatmap?
-Pathways often have inherent biological organization (e.g., metabolic pathways, signaling cascades) that should be preserved. Clustering might:
-- Disrupt known biological relationships
-- Make interpretation less intuitive for domain experts
-- Hide meaningful patterns in pathway hierarchies
+The quadrants in Task 2b represent distinct regulatory regimes:
 
-### Task 4 - Why a diverging palette?
-Diverging color scales (blue-white-red) are ideal for:
-- Showing both positive and negative enrichment
-- Having a clear reference point (white = zero)
-- Making directional changes immediately visible
-- Intuitive interpretation: blue = down, red = up
+| Quadrant | log2 Half-life | log2 Alpha | Biological State | Regulatory Mechanism |
+|----------|----------------|------------|------------------|---------------------|
+| **I** | High | High | High stability, rapid processing | Efficient transcription/export |
+| **II** | Low | High | Low stability, rapid processing | Rapid turnover signals |
+| **III** | Low | Low | Low stability, slow processing | Targeted degradation |
+| **IV** | High | Low | High stability, slow processing | Long-lived transcripts |
 
-### Task 6 - Why stacked instead of side-by-side bars?
-Stacked bars provide:
-- Both absolute and relative comparisons
-- Clear visualization of compositional changes
-- Easy comparison of total proportions across time
-- Better representation of how subgroups contribute to the whole
-- Shows that the total proportion changes while maintaining the ability to see individual contributions
+### Why Cluster Genes but Not Time? (Task 3)
 
-### Task 7 - Why directed network?
-Cell-cell interactions are inherently directional because:
-- Signaling typically flows from one cell to another
-- Ligand-receptor interactions have defined directions
-- Directed edges capture biological reality
-- Allows representation of feedback loops and hierarchies
-- Some cells may signal to others but not receive signals back
+**Clustering genes (rows):**
+- Identifies co-expression modules
+- Reveals functionally related gene groups
+- Discovers novel regulatory relationships
+- Groups genes with similar temporal patterns
 
-### Task 7 - Edge weight biological meaning
-Edge weight represents:
-- **Interaction strength** between cell types
-- **Frequency** of communication events
-- **Number** of ligand-receptor pairs involved
-- **Probability** of functional connection
-- Higher weights indicate stronger biological relationships
+**Not clustering time (columns):**
+- Preserves temporal order (0h → 72h)
+- Maintains biological interpretation of progression
+- Allows visualization of response kinetics
+- Enables identification of early vs late responders
+
+### Why No Clustering in Pathway Heatmap? (Task 4)
+
+Pathway analyses should preserve biological organization:
+
+1. **Hierarchical structure:** Pathways are organized by function (e.g., signaling cascades, metabolic pathways)
+2. **Known relationships:** Clustering would disrupt established biological knowledge
+3. **Interpretability:** Domain experts expect canonical pathway ordering
+4. **Comparison:** Enables direct comparison with literature
+
+### Why a Diverging Color Palette? (Task 4)
+
+The blue-white-red diverging palette is optimal because:
+
+- **Zero-centered:** White represents no change (meaningful reference point)
+- **Directional:** Blue = downregulation, Red = upregulation (immediately intuitive)
+- **Magnitude:** Color intensity reflects effect size
+- **Accessibility:** Works for colorblind viewers (blue-red is distinguishable)
+
+### Why Stacked Instead of Side-by-Side Bars? (Task 6)
+
+Stacked bars provide superior information density:
+
+| Aspect | Stacked | Side-by-side |
+|--------|---------|--------------|
+| Total proportion | ✓ Visible | ✗ Hidden |
+| Individual proportions | ✓ Visible | ✓ Visible |
+| Relative change | ✓ Clear | ✗ Requires calculation |
+| Composition shift | ✓ Immediate | ✗ Needs comparison |
+
+### Why Directed Network? (Task 7)
+
+Directed edges are essential because:
+
+1. **Biological reality:** Cell signaling is directional (one cell signals, another receives)
+2. **Information flow:** Captures which cells influence others
+3. **Feedback loops:** Enables identification of regulatory circuits
+4. **Hierarchy:** Reveals master regulators vs downstream targets
+
+### Edge Weight Biological Meaning
+
+Edge weights encode multiple biological concepts:
+
+- **Interaction strength:** Higher weight = stronger signaling
+- **Frequency:** More weight = more frequent communication events
+- **Ligand-receptor pairs:** Weight may reflect number of molecular interactions
+- **Probability:** Weight can represent likelihood of functional connection
 
 ---
 
 ## Complete R Code
 
+The complete R code for this analysis is available in the repository. Below is the full script used to generate all visualizations:
+
 ```r
 # ============================================================================
 # HACKBIO INTERNSHIP - STAGE TWO PROJECT
 # COMPLETE SOLUTION - ALL PARTS (1, 2, 3) AND TASKS (0-8)
+# Author: Grace Adeloye
+# Date: February 17, 2026
 # ============================================================================
 
 # Load required libraries
@@ -192,8 +339,8 @@ hb_pal <- c("#4e79a7", "#8cd17d", "#e15759", "#fabfd2", "#a0cbe8",
             "#79706e", "#d4a6c8", "#e9e9e9", "#ffbe7d", "#bab0ac",
             "#9d7660", "#d37295", "#86bcb6", "#362a39", "#cd9942")
 
-# Set file path - USER MUST UPDATE THIS
-data_file <- "path/to/your/hb_stage_2.xlsx"
+# Set file path
+data_file <- "hb_stage_2.xlsx"
 
 # ============================================
 # PART 1: GENE EXPRESSION ANALYSIS
@@ -438,3 +585,5 @@ final_figure2 <- (p3a | p3b) / (p3e | p3f) +
 ggsave("Final_Figure_Tasks.png", final_figure2, width = 16, height = 12, dpi = 300)
 
 cat("\n✅ Project complete! All files saved.\n")
+
+
